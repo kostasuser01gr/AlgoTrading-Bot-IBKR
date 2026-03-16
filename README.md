@@ -25,10 +25,29 @@ Production-grade starter monorepo for a native desktop market operator built wit
 ## Quickstart
 
 ```bash
-pnpm install
-uv sync --project workers/quant
+pnpm install --frozen-lockfile
+uv sync --project workers/quant --extra dev
+cargo build --workspace
 cargo test --workspace
 uv run --project workers/quant pytest workers/quant/tests
+```
+
+## Validation
+
+Fast local validation:
+
+```bash
+pnpm check:ts
+cargo fmt --all --check
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test --workspace
+uv run --project workers/quant pytest workers/quant/tests
+```
+
+Full hardening validation:
+
+```bash
+bash scripts/run-all-gates.sh
 ```
 
 ## Development Entry Points
@@ -40,3 +59,7 @@ cargo run -p model-router-service
 cargo run -p risk-engine-service
 ```
 
+## Governance
+
+- [CONTRIBUTING.md](CONTRIBUTING.md)
+- [SECURITY.md](SECURITY.md)
