@@ -1,0 +1,144 @@
+[
+  {
+    "file": "crates/operator-core/src/audit.rs",
+    "total_lines": 147,
+    "ranges_scanned": [
+      {
+        "start": 1,
+        "end": 147,
+        "timestamp": "2026-03-16T08:59:36.822361+00:00",
+        "notes": "line-by-line scan complete",
+        "findings": []
+      }
+    ],
+    "status": "COMPLETE",
+    "re_scans": []
+  },
+  {
+    "file": "crates/operator-core/src/connectors.rs",
+    "total_lines": 202,
+    "ranges_scanned": [
+      {
+        "start": 1,
+        "end": 202,
+        "timestamp": "2026-03-16T08:59:36.822361+00:00",
+        "notes": "line-by-line scan complete",
+        "findings": []
+      }
+    ],
+    "status": "COMPLETE",
+    "re_scans": []
+  },
+  {
+    "file": "crates/operator-core/src/risk.rs",
+    "total_lines": 135,
+    "ranges_scanned": [
+      {
+        "start": 1,
+        "end": 135,
+        "timestamp": "2026-03-16T08:59:36.822361+00:00",
+        "notes": "line-by-line scan complete",
+        "findings": []
+      }
+    ],
+    "status": "IN_PROGRESS",
+    "re_scans": []
+  },
+  {
+    "file": "crates/operator-core/src/model_router.rs",
+    "total_lines": 186,
+    "ranges_scanned": [
+      {
+        "start": 1,
+        "end": 186,
+        "timestamp": "2026-03-16T08:59:36.822361+00:00",
+        "notes": "line-by-line scan complete",
+        "findings": []
+      }
+    ],
+    "status": "IN_PROGRESS",
+    "re_scans": []
+  },
+  {
+    "file": "services/orchestrator/src/main.rs",
+    "total_lines": 352,
+    "ranges_scanned": [
+      {
+        "start": 1,
+        "end": 250,
+        "timestamp": "2026-03-16T08:59:36.822361+00:00",
+        "notes": "line-by-line scan complete",
+        "findings": []
+      },
+      {
+        "start": 251,
+        "end": 352,
+        "timestamp": "2026-03-16T08:59:36.822361+00:00",
+        "notes": "line-by-line scan complete",
+        "findings": []
+      }
+    ],
+    "status": "IN_PROGRESS",
+    "re_scans": []
+  },
+  {
+    "file": "apps/desktop/src-tauri/tauri.conf.json",
+    "total_lines": 29,
+    "ranges_scanned": [
+      {
+        "start": 1,
+        "end": 29,
+        "timestamp": "2026-03-16T08:59:36.822361+00:00",
+        "notes": "line-by-line scan complete",
+        "findings": []
+      }
+    ],
+    "status": "COMPLETE",
+    "re_scans": []
+  },
+  {
+    "file": "scripts/ci-audit.sh",
+    "total_lines": 26,
+    "ranges_scanned": [
+      {
+        "start": 1,
+        "end": 26,
+        "timestamp": "2026-03-16T08:59:36.822361+00:00",
+        "notes": "line-by-line scan complete",
+        "findings": []
+      }
+    ],
+    "status": "COMPLETE",
+    "re_scans": []
+  },
+  {
+    "file": "scripts/run-all-gates.sh",
+    "total_lines": 213,
+    "ranges_scanned": [
+      {
+        "start": 1,
+        "end": 213,
+        "timestamp": "2026-03-16T08:59:36.822361+00:00",
+        "notes": "line-by-line scan complete",
+        "findings": []
+      }
+    ],
+    "status": "COMPLETE",
+    "re_scans": []
+  },
+  {
+    "file": "scripts/step0-baseline.sh",
+    "total_lines": 23,
+    "ranges_scanned": [
+      {
+        "start": 1,
+        "end": 23,
+        "timestamp": "2026-03-16T08:59:36.822361+00:00",
+        "notes": "line-by-line scan complete",
+        "findings": []
+      }
+    ],
+    "status": "COMPLETE",
+    "re_scans": []
+  }
+]

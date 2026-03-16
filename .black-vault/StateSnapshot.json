@@ -1,0 +1,29 @@
+{
+  "goal": "Zero open issues",
+  "current_status": "FAIL_STOP",
+  "scanned_files": 9,
+  "total_files": 128,
+  "findings_open": 6,
+  "findings_verified": 3,
+  "gates_status": {
+    "G1": "PASS",
+    "G2": "PASS",
+    "G3": "PASS",
+    "G4": "PASS",
+    "G5": "PASS",
+    "G6": "FAIL",
+    "G7": "FAIL",
+    "G8": "PASS",
+    "G9": "PASS",
+    "G10": "PASS",
+    "G11": "PASS",
+    "G12": "FAIL",
+    "G13": "PASS",
+    "G14": "PASS"
+  },
+  "next_actions": [
+    "Fix G12 IaC coverage",
+    "Bootstrap Rust coverage toolchain for G6",
+    "Kill surviving mutants for G7"
+  ]
+}

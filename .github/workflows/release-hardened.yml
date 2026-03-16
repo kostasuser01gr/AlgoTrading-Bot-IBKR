@@ -1,0 +1,36 @@
+name: Release Hardened
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup toolchain
+        run: bash scripts/ci/setup-toolchain.sh auto
+
+      - name: Run full gates
+        run: bash scripts/run-all-gates.sh
+
+      - name: Generate compliance report
+        run: bash scripts/github-cli/generate-compliance-report.sh
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="hardening-$(date -u +%Y%m%d%H%M%S)"
+          gh release create "$tag" \
+            BLACK_VAULT_HARDENING_REPORT.md \
+            .black-vault/ComplianceLedger.json \
+            --title "Black Vault Hardening ${tag}" \
+            --notes "Automated hardened release."

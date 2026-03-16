@@ -1,0 +1,110 @@
+[
+  {
+    "id": "BV-001",
+    "severity": "P1",
+    "category": "security/provenance",
+    "file": "crates/operator-core/src/connectors.rs:15",
+    "description": "caller-controlled approved-source seeding was possible",
+    "exploit": "forged trusted source metadata",
+    "fix": "deny unknown fields and remove seed_content path",
+    "test_plan": "cargo test --workspace",
+    "gate_verification": "G4,G9",
+    "status": "VERIFIED"
+  },
+  {
+    "id": "BV-002",
+    "severity": "P1",
+    "category": "correctness/risk",
+    "file": "services/orchestrator/src/main.rs:31",
+    "description": "non-live modes still rely on bootstrap portfolio state",
+    "exploit": "risk decisions can be made from synthetic state",
+    "fix": "replace bootstrap state with trusted provider",
+    "test_plan": "cargo test --workspace",
+    "gate_verification": "G4,G13",
+    "status": "OPEN"
+  },
+  {
+    "id": "BV-003",
+    "severity": "P1",
+    "category": "security/audit",
+    "file": "services/orchestrator/src/main.rs:205",
+    "description": "audit write used to fail open",
+    "exploit": "unlogged recommendations",
+    "fix": "abort request on audit persistence failure",
+    "test_plan": "cargo test --workspace",
+    "gate_verification": "G4,G13",
+    "status": "VERIFIED"
+  },
+  {
+    "id": "BV-004",
+    "severity": "P1",
+    "category": "correctness/modeling",
+    "file": "crates/operator-core/src/model_router.rs:41",
+    "description": "heuristic model adapter fabricates confidence and sizing",
+    "exploit": "placeholder logic can be mistaken for production routing",
+    "fix": "quarantine or replace heuristic adapters in production path",
+    "test_plan": "cargo test --workspace",
+    "gate_verification": "G4,G13",
+    "status": "OPEN"
+  },
+  {
+    "id": "BV-005",
+    "severity": "P1",
+    "category": "risk/control-coverage",
+    "file": "crates/operator-core/src/risk.rs:19",
+    "description": "risk engine lacks liquidity, spread, slippage, volatility, and cooldown checks",
+    "exploit": "unsafe approvals under incomplete controls",
+    "fix": "expand policy inputs and reject missing critical checks",
+    "test_plan": "cargo test --workspace",
+    "gate_verification": "G4,G13",
+    "status": "OPEN"
+  },
+  {
+    "id": "BV-006",
+    "severity": "P1",
+    "category": "security/configuration",
+    "file": "apps/desktop/src-tauri/tauri.conf.json:22",
+    "description": "desktop CSP was null",
+    "exploit": "unbounded renderer capabilities",
+    "fix": "explicit CSP policy",
+    "test_plan": "pnpm --filter @adaptive/desktop build",
+    "gate_verification": "G1,G11",
+    "status": "VERIFIED"
+  },
+  {
+    "id": "BV-007",
+    "severity": "P1",
+    "category": "coverage/toolchain",
+    "file": "scripts/run-all-gates.sh:129",
+    "description": "Rust coverage gate requires llvm-tools-preview on active toolchain",
+    "exploit": "coverage proof missing",
+    "fix": "bootstrap coverage toolchain or supply LLVM_COV/LLVM_PROFDATA",
+    "test_plan": "bash scripts/run-all-gates.sh",
+    "gate_verification": "G6",
+    "status": "OPEN"
+  },
+  {
+    "id": "BV-008",
+    "severity": "P1",
+    "category": "mutation/coverage",
+    "file": "crates/operator-core/src/fusion.rs:1",
+    "description": "core mutation kill score and coverage remain below enterprise target",
+    "exploit": "logic regressions may survive tests",
+    "fix": "add targeted tests to kill surviving mutants and raise coverage",
+    "test_plan": "cargo mutants -p operator-core --timeout 60 --no-shuffle --in-place",
+    "gate_verification": "G6,G7",
+    "status": "OPEN"
+  },
+  {
+    "id": "BV-009",
+    "severity": "P2",
+    "category": "iac/config-scan",
+    "file": "infra/:1",
+    "description": "Trivy config scan finds zero supported config targets in infra/",
+    "exploit": "IaC gate provides no meaningful coverage",
+    "fix": "add supported IaC manifests or adapt the gate for actual repo assets",
+    "test_plan": "trivy config --severity HIGH,CRITICAL --exit-code 1 infra",
+    "gate_verification": "G12",
+    "status": "OPEN"
+  }
+]

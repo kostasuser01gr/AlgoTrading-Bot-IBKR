@@ -1,0 +1,39 @@
+name: Compliance Audit
+
+on:
+  schedule:
+    - cron: "0 0 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup toolchain
+        run: bash scripts/ci/setup-toolchain.sh auto
+
+      - name: Run gate suite
+        run: bash scripts/run-all-gates.sh
+
+      - name: Generate compliance report
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/github-cli/generate-compliance-report.sh
+
+      - name: Upload compliance artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance-audit-${{ github.run_id }}
+          path: |
+            BLACK_VAULT_HARDENING_REPORT.md
+            .black-vault

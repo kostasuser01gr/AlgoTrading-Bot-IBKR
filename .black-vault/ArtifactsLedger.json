@@ -1,0 +1,14 @@
+[
+  {
+    "gate_run_id": "GR-2026-03-16-090001",
+    "timestamp": "2026-03-16T09:02:00Z",
+    "all_gates_status": "FAIL",
+    "artifact_dir": "artifacts/black-vault/runs/GR-2026-03-16-090001"
+  },
+  {
+    "gate_run_id": "GR-2026-03-16-160007",
+    "timestamp": "2026-03-16T16:09:29Z",
+    "all_gates_status": "PASS",
+    "artifact_dir": "artifacts/black-vault/runs/GR-2026-03-16-160007"
+  }
+]

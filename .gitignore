@@ -12,4 +12,5 @@ __pycache__/
 artifacts/
 runtime-orchestrator.audit.jsonl
 mutants.out/
+mutants.out.old/
 apps/desktop/src-tauri/target/

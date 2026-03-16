@@ -1,0 +1,52 @@
+name: Gates (PR)
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup toolchain
+        run: bash scripts/ci/setup-toolchain.sh auto
+
+      - name: Build
+        run: bash scripts/ci/run-gates.sh G1
+
+      - name: Lint
+        run: bash scripts/ci/run-gates.sh G2
+
+      - name: Typecheck
+        run: bash scripts/ci/run-gates.sh G3
+
+      - name: Test
+        run: bash scripts/ci/run-gates.sh G4
+
+      - name: Coverage
+        run: bash scripts/ci/run-gates.sh G6
+
+      - name: Audit
+        run: bash scripts/ci/run-gates.sh G8
+
+      - name: SAST
+        run: bash scripts/ci/run-gates.sh G9
+
+      - name: Secrets
+        run: bash scripts/ci/run-gates.sh G10
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gate-artifacts-pr
+          path: artifacts/black-vault/runs

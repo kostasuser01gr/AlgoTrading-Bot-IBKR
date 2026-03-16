@@ -1,0 +1,52 @@
+name: Hardening Nightly
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: read
+
+jobs:
+  nightly:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup toolchain
+        run: bash scripts/ci/setup-toolchain.sh auto
+
+      - name: Run full gates
+        run: bash scripts/run-all-gates.sh
+
+      - name: Record metrics
+        run: bash scripts/ci/record-metrics.sh
+
+      - name: Generate compliance report
+        run: bash scripts/github-cli/generate-compliance-report.sh
+
+      - name: Sync findings register
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/github-cli/sync-issues-to-findings.sh
+
+      - name: Update project board
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/github-cli/update-project-board.sh
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-hardening-${{ github.run_id }}
+          path: |
+            artifacts/black-vault/runs
+            .black-vault
+            BLACK_VAULT_HARDENING_REPORT.md

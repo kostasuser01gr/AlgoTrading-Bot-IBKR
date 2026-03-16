@@ -1,0 +1,15 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files
+        args: ["--maxkb=1000"]
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: detect-private-key
+
+  - repo: https://github.com/trufflesecurity/trufflehog
+    rev: v3.90.5
+    hooks:
+      - id: trufflehog
+        args: ["git", "file:///", "--fail"]
