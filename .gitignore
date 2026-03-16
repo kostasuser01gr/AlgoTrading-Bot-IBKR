@@ -1,0 +1,14 @@
+node_modules/
+dist/
+target/
+.venv/
+__pycache__/
+.pytest_cache/
+.coverage
+.DS_Store
+*.log
+*.tsbuildinfo
+*.egg-info/
+artifacts/
+runtime-orchestrator.audit.jsonl
+apps/desktop/src-tauri/target/

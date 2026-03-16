@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+version_json="$(curl -fsS http://127.0.0.1:11434/api/version)"
+echo "version=${version_json}"
+ollama ps >/dev/null 2>&1 || true
+echo "status=ok"
+

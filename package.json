@@ -1,0 +1,14 @@
+{
+  "name": "adaptive-multi-model-trading-operator",
+  "private": true,
+  "packageManager": "pnpm@10.30.3",
+  "scripts": {
+    "build:types": "pnpm --filter @adaptive/shared-types build && pnpm --filter @adaptive/sdk build && pnpm --filter @adaptive/ui build",
+    "check:ts": "pnpm -r --if-present typecheck",
+    "check:rust": "cargo test --workspace",
+    "check:python": "uv run --project workers/quant pytest workers/quant/tests",
+    "check": "pnpm check:ts && cargo test --workspace && uv run --project workers/quant pytest workers/quant/tests",
+    "dev:desktop": "pnpm --filter @adaptive/desktop dev"
+  }
+}
+

@@ -1,0 +1,20 @@
+{
+  "id": "2f845f5a-28f9-4da6-bcf1-a7c34758b97c",
+  "market": "BTC-USD",
+  "regime": "volatile",
+  "thesis": "Consensus leans long on BTC-USD over 1d with regime-aware weighted evidence",
+  "direction": "long",
+  "timeHorizon": "1d",
+  "confidence": 0.71,
+  "disagreementScore": 0.24,
+  "overconfidenceFlag": false,
+  "recommendedAction": "open_long",
+  "recommendedSize": 0.015,
+  "abstain": false,
+  "supportingEvidence": [],
+  "dissentingViews": [],
+  "whyNot": [],
+  "modelOutputs": [],
+  "sourceRefs": ["market-feed", "news-wire"],
+  "generatedAt": "2026-03-16T12:00:00Z"
+}

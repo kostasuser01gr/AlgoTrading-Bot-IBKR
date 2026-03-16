@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if curl -fsS http://127.0.0.1:11434/api/version >/dev/null 2>&1; then
+  echo "ollama service reachable on 127.0.0.1:11434"
+fi
+
+if [[ -f /tmp/ollama.log ]]; then
+  if [[ -s /tmp/ollama.log ]]; then
+    tail -n 50 /tmp/ollama.log
+  else
+    echo "ollama log file is present but empty"
+  fi
+else
+  echo "ollama log file not present at /tmp/ollama.log"
+fi
+
+if [[ -f /tmp/ollama.err ]]; then
+  if [[ -s /tmp/ollama.err ]]; then
+    if grep -q "address already in use" /tmp/ollama.err && curl -fsS http://127.0.0.1:11434/api/version >/dev/null 2>&1; then
+      echo "ollama err contains historical bind conflicts while a healthy service is already listening"
+    else
+      tail -n 50 /tmp/ollama.err
+    fi
+  else
+    echo "ollama err file is present but empty"
+  fi
+else
+  echo "ollama err file not present at /tmp/ollama.err"
+fi

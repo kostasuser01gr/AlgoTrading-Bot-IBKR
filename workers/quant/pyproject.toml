@@ -1,0 +1,26 @@
+[project]
+name = "adaptive-quant"
+version = "0.1.0"
+description = "Quant research and backtesting worker for Adaptive Multi-Model Trading Operator"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8.4.2"]
+
+[project.scripts]
+adaptive-quant = "adaptive_quant.cli:main"
+
+[build-system]
+requires = ["setuptools>=80.9.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
