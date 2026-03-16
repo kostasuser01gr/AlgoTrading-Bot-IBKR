@@ -24,6 +24,8 @@ jobs:
           fetch-depth: 0
 
       - name: Setup toolchain
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: bash scripts/ci/setup-toolchain.sh auto
 
       - name: Build
