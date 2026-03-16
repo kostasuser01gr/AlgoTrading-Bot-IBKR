@@ -11,4 +11,5 @@ __pycache__/
 *.egg-info/
 artifacts/
 runtime-orchestrator.audit.jsonl
+mutants.out/
 apps/desktop/src-tauri/target/

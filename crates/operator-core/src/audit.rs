@@ -76,7 +76,7 @@ mod tests {
 
     use crate::domain::{AuditEvent, OperationalMode};
 
-    use super::TamperEvidentAuditWriter;
+    use super::{AuditEnvelope, TamperEvidentAuditWriter, hash_record};
 
     #[tokio::test]
     async fn audit_writer_chains_hashes() {
@@ -111,6 +111,37 @@ mod tests {
 
         let content = fs::read_to_string(&path).expect("read audit log");
         assert_eq!(content.lines().count(), 2);
+        let _ = fs::remove_file(path);
+    }
+
+    #[tokio::test]
+    async fn audit_writer_persists_expected_hashes() {
+        let path = std::env::temp_dir().join(format!("audit-{}.jsonl", Uuid::new_v4()));
+        let writer = TamperEvidentAuditWriter::new(&path);
+        let event = AuditEvent {
+            id: Uuid::new_v4(),
+            actor: "tester".to_string(),
+            action: "persist".to_string(),
+            mode: OperationalMode::Research,
+            status: "ok".to_string(),
+            correlation_id: Uuid::new_v4(),
+            timestamp: Utc::now(),
+            details: serde_json::json!({"step": 1}),
+        };
+
+        let envelope = writer.write(event.clone()).await.expect("write succeeds");
+        let event_json = serde_json::to_string(&event).expect("serialize event");
+        let expected_hash = hash_record(None, &event_json);
+
+        assert_eq!(envelope.previous_hash, None);
+        assert_eq!(envelope.record_hash, expected_hash);
+
+        let stored = fs::read_to_string(&path).expect("read persisted audit log");
+        let persisted: AuditEnvelope =
+            serde_json::from_str(stored.lines().next().expect("one persisted envelope"))
+                .expect("parse stored envelope");
+        assert_eq!(persisted.record_hash, expected_hash);
+
         let _ = fs::remove_file(path);
     }
 }

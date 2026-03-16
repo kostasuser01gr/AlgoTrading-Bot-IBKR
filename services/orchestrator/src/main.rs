@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::env;
 use std::time::Duration;
 
 use axum::extract::State;
@@ -22,6 +23,51 @@ struct AppState {
     risk_engine: RiskEngine,
     audit_writer: TamperEvidentAuditWriter,
     command_bus: CommandBus,
+    portfolio_state: PortfolioStateResolver,
+    live_mode_enabled: bool,
+}
+
+#[derive(Clone)]
+struct PortfolioStateResolver {
+    research: PortfolioSnapshot,
+    backtest: PortfolioSnapshot,
+    paper: PortfolioSnapshot,
+    live: Option<PortfolioSnapshot>,
+}
+
+impl PortfolioStateResolver {
+    fn from_env() -> Result<Self, String> {
+        let live = match env::var("OPERATOR_LIVE_PORTFOLIO_SNAPSHOT_JSON") {
+            Ok(raw) => Some(serde_json::from_str(&raw).map_err(|error| {
+                format!("invalid OPERATOR_LIVE_PORTFOLIO_SNAPSHOT_JSON: {error}")
+            })?),
+            Err(env::VarError::NotPresent) => None,
+            Err(error) => {
+                return Err(format!(
+                    "failed to read OPERATOR_LIVE_PORTFOLIO_SNAPSHOT_JSON: {error}"
+                ));
+            }
+        };
+
+        Ok(Self {
+            research: bootstrap_portfolio("research", 0.12, 0.08, 0.10, 2),
+            backtest: bootstrap_portfolio("backtest", 0.08, 0.04, 0.05, 1),
+            paper: bootstrap_portfolio("paper", 0.10, 0.06, 0.08, 2),
+            live,
+        })
+    }
+
+    fn resolve(&self, mode: &OperationalMode) -> Result<PortfolioSnapshot, String> {
+        match mode {
+            OperationalMode::Research => Ok(self.research.clone()),
+            OperationalMode::Backtest => Ok(self.backtest.clone()),
+            OperationalMode::Paper => Ok(self.paper.clone()),
+            OperationalMode::Live => self.live.clone().ok_or_else(|| {
+                "trusted live portfolio state is unavailable; set OPERATOR_LIVE_PORTFOLIO_SNAPSHOT_JSON"
+                    .to_string()
+            }),
+        }
+    }
 }
 
 #[tokio::main]
@@ -32,6 +78,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let model_router = ModelRouter::default_router();
     let risk_engine = RiskEngine::new(RiskPolicyConfig::default());
     let (command_bus, mut receiver) = CommandBus::new(512);
+    let portfolio_state = PortfolioStateResolver::from_env().map_err(std::io::Error::other)?;
+    let live_mode_enabled =
+        matches!(env::var("OPERATOR_ENABLE_LIVE_TRADING").as_deref(), Ok("true"));
 
     tokio::spawn(async move {
         while let Some(intent) = receiver.recv().await {
@@ -49,7 +98,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         })
         .await;
 
-    let state = AppState { model_router, risk_engine, audit_writer, command_bus };
+    let state = AppState {
+        model_router,
+        risk_engine,
+        audit_writer,
+        command_bus,
+        portfolio_state,
+        live_mode_enabled,
+    };
 
     let app = Router::new()
         .route("/health", get(health))
@@ -71,6 +127,7 @@ async fn health() -> Json<HealthSnapshot> {
         details: BTreeMap::from([
             ("scheduler".to_string(), "running".to_string()),
             ("audit".to_string(), "enabled".to_string()),
+            ("live_mode".to_string(), "explicit-enable-required".to_string()),
         ]),
         checked_at: Utc::now(),
     })
@@ -80,6 +137,14 @@ async fn chat_request(
     State(state): State<AppState>,
     Json(request): Json<ChatRequest>,
 ) -> Result<Json<ChatResponse>, (StatusCode, String)> {
+    if matches!(request.mode, OperationalMode::Live) && !state.live_mode_enabled {
+        return Err((
+            StatusCode::FORBIDDEN,
+            "live mode requires OPERATOR_ENABLE_LIVE_TRADING=true and verified model adapters"
+                .to_string(),
+        ));
+    }
+
     let correlation_id = state
         .command_bus
         .publish(
@@ -91,6 +156,10 @@ async fn chat_request(
         )
         .await
         .map_err(|error| (StatusCode::INTERNAL_SERVER_ERROR, error.to_string()))?;
+    let portfolio = state
+        .portfolio_state
+        .resolve(&request.mode)
+        .map_err(|error| (StatusCode::FAILED_DEPENDENCY, error))?;
 
     let routing = state
         .model_router
@@ -108,11 +177,7 @@ async fn chat_request(
         .await
         .map_err(|error| (StatusCode::BAD_GATEWAY, error.to_string()))?;
 
-    let risk = state.risk_engine.evaluate(
-        &routing.fused,
-        &default_portfolio(&request.mode),
-        request.mode.clone(),
-    );
+    let risk = state.risk_engine.evaluate(&routing.fused, &portfolio, request.mode.clone());
 
     let response = ChatResponse {
         narrative: format!(
@@ -135,7 +200,7 @@ async fn chat_request(
         risk: risk.clone(),
     };
 
-    if let Err(error) = state
+    state
         .audit_writer
         .write(AuditEvent {
             id: Uuid::new_v4(),
@@ -153,29 +218,135 @@ async fn chat_request(
             }),
         })
         .await
-    {
-        error!(error = %error, "failed to write audit event");
-    }
+        .map_err(|error| {
+            error!(error = %error, "failed to write audit event");
+            (StatusCode::INTERNAL_SERVER_ERROR, format!("audit persistence failure: {error}"))
+        })?;
 
     Ok(Json(response))
 }
 
-fn default_portfolio(mode: &OperationalMode) -> PortfolioSnapshot {
-    let account_id = match mode {
-        OperationalMode::Research => "research",
-        OperationalMode::Backtest => "backtest",
-        OperationalMode::Paper => "paper",
-        OperationalMode::Live => "live",
-    };
+fn bootstrap_portfolio(
+    account_id: &str,
+    gross_exposure: f64,
+    net_exposure: f64,
+    correlated_exposure: f64,
+    open_positions: usize,
+) -> PortfolioSnapshot {
     PortfolioSnapshot {
         account_id: account_id.to_string(),
         cash: 250_000.0,
         equity: 250_000.0,
         realized_daily_pnl: 0.0,
         realized_weekly_pnl: 0.0,
-        open_positions: 2,
-        gross_exposure: 0.12,
-        net_exposure: 0.08,
-        correlated_exposure: 0.10,
+        open_positions,
+        gross_exposure,
+        net_exposure,
+        correlated_exposure,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::fs;
+
+    use axum::{Json, extract::State, http::StatusCode};
+    use uuid::Uuid;
+
+    use super::{AppState, PortfolioStateResolver, bootstrap_portfolio, chat_request};
+    use operator_core::{
+        ChatRequest, CommandBus, ModelRouter, OperationalMode, RiskEngine, RiskPolicyConfig,
+        TamperEvidentAuditWriter,
+    };
+
+    fn build_state(
+        audit_path: &std::path::Path,
+        live_mode_enabled: bool,
+        live: Option<operator_core::PortfolioSnapshot>,
+    ) -> AppState {
+        let (command_bus, mut receiver) = CommandBus::new(8);
+        tokio::spawn(async move { while receiver.recv().await.is_some() {} });
+        AppState {
+            model_router: ModelRouter::default_router(),
+            risk_engine: RiskEngine::new(RiskPolicyConfig::default()),
+            audit_writer: TamperEvidentAuditWriter::new(audit_path),
+            command_bus,
+            portfolio_state: PortfolioStateResolver {
+                research: bootstrap_portfolio("research", 0.12, 0.08, 0.10, 2),
+                backtest: bootstrap_portfolio("backtest", 0.08, 0.04, 0.05, 1),
+                paper: bootstrap_portfolio("paper", 0.10, 0.06, 0.08, 2),
+                live,
+            },
+            live_mode_enabled,
+        }
+    }
+
+    fn request(mode: OperationalMode) -> ChatRequest {
+        ChatRequest {
+            actor: "desktop-operator".to_string(),
+            mode,
+            market: "BTC-USD".to_string(),
+            message: "Generate a 1-day thesis with dissent and risk constraints.".to_string(),
+            watchlist: vec!["BTC-USD".to_string()],
+        }
+    }
+
+    #[tokio::test]
+    async fn chat_request_rejects_live_mode_without_explicit_enablement() {
+        let audit_path = std::env::temp_dir().join(format!("audit-{}.jsonl", Uuid::new_v4()));
+        let state =
+            build_state(&audit_path, false, Some(bootstrap_portfolio("live", 0.04, 0.02, 0.01, 1)));
+
+        let error = chat_request(State(state), Json(request(OperationalMode::Live)))
+            .await
+            .expect_err("live mode should be blocked");
+
+        assert_eq!(error.0, StatusCode::FORBIDDEN);
+        let _ = fs::remove_file(audit_path);
+    }
+
+    #[tokio::test]
+    async fn chat_request_requires_trusted_live_portfolio_state() {
+        let audit_path = std::env::temp_dir().join(format!("audit-{}.jsonl", Uuid::new_v4()));
+        let state = build_state(&audit_path, true, None);
+
+        let error = chat_request(State(state), Json(request(OperationalMode::Live)))
+            .await
+            .expect_err("live mode should fail without trusted state");
+
+        assert_eq!(error.0, StatusCode::FAILED_DEPENDENCY);
+        let _ = fs::remove_file(audit_path);
+    }
+
+    #[tokio::test]
+    async fn chat_request_fails_closed_on_audit_error() {
+        let audit_dir = std::env::temp_dir().join(format!("audit-dir-{}", Uuid::new_v4()));
+        fs::create_dir(&audit_dir).expect("create temp audit dir");
+        let state = build_state(&audit_dir, false, None);
+
+        let error = chat_request(State(state), Json(request(OperationalMode::Research)))
+            .await
+            .expect_err("audit failure should block the response");
+
+        assert_eq!(error.0, StatusCode::INTERNAL_SERVER_ERROR);
+        let _ = fs::remove_dir_all(audit_dir);
+    }
+
+    #[tokio::test]
+    async fn chat_request_succeeds_for_research_with_bootstrap_state() {
+        let audit_path = std::env::temp_dir().join(format!("audit-{}.jsonl", Uuid::new_v4()));
+        let state = build_state(&audit_path, false, None);
+
+        let response = chat_request(State(state), Json(request(OperationalMode::Research)))
+            .await
+            .expect("research mode should succeed")
+            .0;
+
+        assert!(response.risk.approved);
+        assert_ne!(
+            response.machine_payload["correlation_id"].as_str(),
+            Some("00000000-0000-0000-0000-000000000000")
+        );
+        let _ = fs::remove_file(audit_path);
     }
 }
