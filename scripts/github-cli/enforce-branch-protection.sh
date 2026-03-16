@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO=${1:-.}
+source "$(dirname "$0")/repo-slug.sh"
+
+REPO=${1:-}
 BRANCH=${2:-main}
-OWNER=$(gh repo view "$REPO" --json owner -q '.owner.login')
-NAME=$(gh repo view "$REPO" --json name -q '.name')
-REPO_SLUG="$OWNER/$NAME"
+REPO_SLUG=$(resolve_repo_slug "$REPO")
 
 gh api "repos/$REPO_SLUG/branches/$BRANCH/protection" \
   --method PUT \

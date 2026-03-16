@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO=${1:-.}
-OWNER=$(gh repo view "$REPO" --json owner -q '.owner.login')
-NAME=$(gh repo view "$REPO" --json name -q '.name')
-REPO_SLUG="$OWNER/$NAME"
+source "$(dirname "$0")/repo-slug.sh"
+
+REPO=${1:-}
+REPO_SLUG=$(resolve_repo_slug "$REPO")
+OWNER=${REPO_SLUG%/*}
+NAME=${REPO_SLUG#*/}
 
 gh project create --owner "$OWNER" --title "Hardening Sprint" >/dev/null 2>&1 || true
 

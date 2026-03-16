@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO=${1:-.}
-OWNER=$(gh repo view "$REPO" --json owner -q '.owner.login')
-NAME=$(gh repo view "$REPO" --json name -q '.name')
-REPO_SLUG="$OWNER/$NAME"
+source "$(dirname "$0")/repo-slug.sh"
+
+REPO=${1:-}
+REPO_SLUG=$(resolve_repo_slug "$REPO")
 
 tmp_file=$(mktemp)
 gh issue list --repo "$REPO_SLUG" --label "type:finding" --state all --json number,title,body,labels,state,createdAt >"$tmp_file"
