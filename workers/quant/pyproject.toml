@@ -6,7 +6,7 @@ requires-python = ">=3.12"
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["pytest>=8.4.2"]
+dev = ["pytest>=9.0.3"]
 
 [project.scripts]
 adaptive-quant = "adaptive_quant.cli:main"
