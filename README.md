@@ -1,6 +1,6 @@
 # Adaptive Multi-Model Trading Operator
 
-[![CI](https://github.com/kostasuser01gr/AlgoTrading-Bot-IBKR/actions/workflows/gates-on-pr.yml/badge.svg)](https://github.com/kostasuser01gr/AlgoTrading-Bot-IBKR/actions)
+[![CI](https://github.com/kostasuser01gr/AlgoTrading-Bot-IBKR/actions/workflows/ci-build.yml/badge.svg)](https://github.com/kostasuser01gr/AlgoTrading-Bot-IBKR/actions/workflows/ci-build.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/Rust-stable-orange)](https://www.rust-lang.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org)
