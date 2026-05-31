@@ -83,6 +83,10 @@ if ! command -v trivy >/dev/null 2>&1; then
   install_with_fallback trivy https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh
 fi
 
+if ! rustup show active-toolchain >/dev/null 2>&1; then
+  rustup default stable
+fi
+
 rustup component add llvm-tools-preview
 pnpm install --frozen-lockfile
 uv sync --project workers/quant --extra dev
