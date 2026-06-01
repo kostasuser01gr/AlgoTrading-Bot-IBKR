@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO=${1:-.}
-OWNER=$(gh repo view "$REPO" --json owner -q '.owner.login')
-NAME=$(gh repo view "$REPO" --json name -q '.name')
-REPO_SLUG="$OWNER/$NAME"
+REPO_ARG=${1:-}
+if [[ -n "${GITHUB_REPOSITORY:-}" && ( -z "$REPO_ARG" || "$REPO_ARG" == "." ) ]]; then
+  REPO_SLUG="$GITHUB_REPOSITORY"
+else
+  REPO=${REPO_ARG:-.}
+  OWNER=$(gh repo view "$REPO" --json owner -q '.owner.login')
+  NAME=$(gh repo view "$REPO" --json name -q '.name')
+  REPO_SLUG="$OWNER/$NAME"
+fi
 
 tmp_file=$(mktemp)
 gh issue list --repo "$REPO_SLUG" --label "type:finding" --state all --json number,title,body,labels,state,createdAt >"$tmp_file"
