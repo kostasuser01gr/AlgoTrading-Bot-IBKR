@@ -46,3 +46,19 @@ cargo run -p model-router-service
 cargo run -p risk-engine-service
 ```
 
+---
+
+## Author
+
+**Konstantinos Foskolakis**
+Full-stack engineer — Heraklion, Crete, Greece
+[github.com/kostasuser01gr](https://github.com/kostasuser01gr)
+
+---
+
+## Portfolio Positioning
+
+This project demonstrates monorepo architecture across three languages — Rust, Python, and TypeScript — organized around strict execution discipline: no live trades without policy and risk approval, full mode separation between research/backtest/paper/live, and an auditable-by-default design. The Rust crates handle the performance-critical path: orchestration, risk, execution, and connector primitives. The Python quant package handles research and backtesting. The TypeScript layer provides the operator console and shared schemas. The design principles section is not marketing copy — it reflects the real constraints of building automated trading systems where silent failures have financial consequences.
+
+*Built as a portfolio-grade algorithmic trading operator monorepo. Estimated implementation effort for the current public version: 7–12 focused development days.*
+
